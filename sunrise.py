@@ -4,6 +4,8 @@ import sys
 from flask import Flask
 from flask import jsonify
 from flask import abort
+from flask import make_response
+from flask import request
 import datetime
 import sqlite3
 
@@ -17,8 +19,8 @@ logger.addHandler(ch)
 app = Flask(__name__)
 
 
-objects = [(0,datetime.time(hour=8, minute=0, second=0),datetime.timedelta(minutes=30), 'mon,tue,wed,thu,fri',True,False,datetime.datetime(2017, 11, 3, hour=7, minute=45, second=0)),
-           (1,datetime.time(hour=10, minute=0, second=0),datetime.timedelta(minutes=20),'',True,True,datetime.datetime(2017, 11, 4, hour=9, minute=50, second=0))
+objects = [(datetime.time(hour=8, minute=0, second=0),datetime.timedelta(minutes=30), 'mon,tue,wed,thu,fri',True,False,datetime.datetime(2017, 11, 3, hour=7, minute=45, second=0)),
+           (datetime.time(hour=10, minute=0, second=0),datetime.timedelta(minutes=20),'',True,True,datetime.datetime(2017, 11, 4, hour=9, minute=50, second=0))
 ]
 
 # Time
@@ -71,13 +73,14 @@ def init_db(cn):
         v = -1
     if v != ver:
         c.execute('drop table if exists alarms')
-        c.execute('create table alarms(id integer primary key, alarm_time time, sunrise_time timedelta, days list, enabled integer, active integer, disable_time datetime)')
+        c.execute('create table alarms(id integer primary key autoincrement, alarm_time time, sunrise_time timedelta, days list, enabled integer, active integer, disable_time datetime)')
         c.execute('create table if not exists properties(name text unique, value text)')
         c.execute('replace into properties values (?, ?)',("version",ver))
-        c.executemany('insert into alarms values(?, ?, ?, ?, ?, ?, ?)', objects)
+        c.executemany('insert into alarms (alarm_time, sunrise_time, days, enabled, active, disable_time) values(?, ?, ?, ?, ?, ?)', objects)
         cn.commit()
 
 
+# получить список будильников
 @app.route('/alarms', methods=['GET'])
 def get_alarms():
     alarms = []
@@ -85,6 +88,7 @@ def get_alarms():
         alarms.append(e)
     return jsonify(serialize({'alarms': alarms}))
 
+# получить информацию по конкретному будильнику
 @app.route('/alarms/<int:id>', methods=['GET'])
 def get_alarm(id):
     cur.execute('select * from alarms where id = ?',(id,))
@@ -93,6 +97,27 @@ def get_alarm(id):
         abort(404)
     return jsonify(serialize({'alarm': alarm}))
 
+# вернуть ошибку, если ошибка 404
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+# создание нового будильника
+@app.route('/alarms', methods=['POST'])
+def create_alarm():
+    if not request.json:
+        abort(400)
+    alarm = [
+        request.json['alarm_time'],
+        request.json['sunrise_time'],
+        request.json.get('days', ""),
+        True,
+        False,
+        None #datetime.now()
+    ]
+    cur.execute('insert into alarms (alarm_time, sunrise_time, days, enabled, active, disable_time) values(?, ?, ?, ?, ?, ?)',alarm)
+    conn.commit()
+    return jsonify(serialize({'alarm': alarm})), 201
 
 def dict_factory(cursor, row):
     d = {}
