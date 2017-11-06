@@ -3,6 +3,7 @@ import sys
 #from LightControl import LightControl
 from flask import Flask
 from flask import jsonify
+from flask import abort
 import datetime
 import sqlite3
 
@@ -83,6 +84,14 @@ def get_alarms():
     for e in cur.execute('select * from alarms'):
         alarms.append(e)
     return jsonify(serialize({'alarms': alarms}))
+
+@app.route('/alarms/<int:id>', methods=['GET'])
+def get_alarm(id):
+    cur.execute('select * from alarms where id = ?',(id,))
+    alarm = cur.fetchone()
+    if alarm is None:
+        abort(404)
+    return jsonify(serialize({'alarm': alarm}))
 
 
 def dict_factory(cursor, row):
