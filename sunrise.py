@@ -19,6 +19,10 @@ logger.addHandler(ch)
 app = Flask(__name__)
 
 
+class NotFoundError(Exception):
+    pass
+
+
 # Time
 def convert_time(s):
     return datetime.datetime.strptime(s.decode(), '%H:%M:%S').time()
@@ -86,7 +90,10 @@ def init_db(cn):
 # Функция, которая возвращает запись в базе данных по id
 def get_alarm_by_id(alarm_id):
     cur.execute('select * from alarms where id = ?', (alarm_id,))
-    return cur.fetchone()
+    alarm = cur.fetchone()
+    if alarm is None:
+        raise NotFoundError
+    return alarm
 
 
 # получить список будильников
@@ -102,13 +109,17 @@ def get_alarms():
 @app.route('/alarms/<int:id>', methods=['GET'])
 def get_alarm(id):
     alarm = get_alarm_by_id(id)
-    if alarm is None:
-        abort(404)
     return jsonify(serialize({'alarm': alarm}))
 
 
 # вернуть ошибку, если ошибка 404
 @app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+# вернуть ошибку, если ошибка 404
+@app.errorhandler(NotFoundError)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
@@ -137,8 +148,6 @@ def create_alarm():
 @app.route('/alarms/<int:id>', methods=['PUT'])
 def update_alarm(id):
     alarm = get_alarm_by_id(id)
-    if alarm is None:
-        abort(404)
     if not request.json:
         abort(400)
     if 'alarm_time' in request.json and type(request.json['alarm_time']) != str:
@@ -163,9 +172,7 @@ def update_alarm(id):
 # удаление будильника
 @app.route('/alarms/<int:id>', methods=['DELETE'])
 def delete_alarm(id):
-    alarm = get_alarm_by_id(id)
-    if alarm is None:
-        abort(404)
+    get_alarm_by_id(id)
     cur.execute('delete from alarms '
                 'where id = ?', (id,))
     conn.commit()
