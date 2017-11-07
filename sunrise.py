@@ -141,7 +141,7 @@ def create_alarm():
         'insert into alarms (alarm_time, sunrise_time, days, enabled, active, disable_time) values(?, ?, ?, ?, ?, ?)',
         alarm)
     conn.commit()
-    return jsonify(serialize({'alarm': alarm})), 201
+    return jsonify(serialize({'alarm': get_alarm_by_id(cur.lastrowid)})), 201
 
 
 # редактирование будильника
