@@ -113,11 +113,51 @@ def create_alarm():
         request.json.get('days', ""),
         True,
         False,
-        None #datetime.now()
+        datetime.datetime.now()
     ]
     cur.execute('insert into alarms (alarm_time, sunrise_time, days, enabled, active, disable_time) values(?, ?, ?, ?, ?, ?)',alarm)
     conn.commit()
     return jsonify(serialize({'alarm': alarm})), 201
+
+@app.route('/alarms/<int:id>', methods=['PUT'])
+def update_alarm(id):
+    cur.execute('select * from alarms where id = ?', (id,))
+    alarm = cur.fetchone()
+    if alarm is None:
+        abort(404)
+    if not request.json:
+        abort(400)
+    #if 'alarm_time' in request.json and type(request.json['alarm_time']) != unicode: # unicode
+        #abort(400)
+    #if 'sunrise_time' in request.json and type(request.json['sunrise_time']) is not int:
+        #abort(400)
+    #if 'days' in request.json and type(request.json['days']) is not unicode: # unicode
+        #abort(400)
+    cur.execute('update alarms'
+                'set alarm_time = ?, sunrise_time = ?, days = ?, enabled = ?'
+                'where id = ?',
+                (request.json['alarm_time'],
+                 request.json['sunrise_time'],
+                 request.json['days'],
+                 request.json['enabled'],
+                 id))
+    #alarm["alarm_time"] = request.json.get('alarm_time', alarm[0]['alarm_time'])
+    #alarm[0]['sunrise_time'] = request.json.get('sunrise_time', alarm[0]['sunrise_time'])
+    #alarm[0]['days'] = request.json.get('days', alarm[0]['days'])
+    conn.commit()
+    cur.execute('select * from alarms where id = ?', (id,)) #надо ли так делать?
+    alarm = cur.fetchone()
+    return jsonify(serialize({'alarm': alarm}))
+
+@app.route('/alarms/<int:id>', methods=['DELETE'])
+def delete_alarm(id):
+    cur.execute('select * from alarms where id = ?', (id,))
+    alarm = cur.fetchone()
+    if alarm is None:
+        abort(404)
+    cur.execute('delete from alarms'
+                'where id = ?',(id,))
+    return jsonify(serialize({'result': True}))
 
 def dict_factory(cursor, row):
     d = {}
