@@ -13,13 +13,13 @@ class LightControl:
         self.port = app_config['port']
         self.com = serial.Serial(
             port=self.port,
-            baudrate=250000,
+            baudrate=9600,
             bytesize=serial.EIGHTBITS,
-            stopbits=serial.STOPBITS_TWO,
-            parity=serial.PARITY_MARK,
+            stopbits=serial.STOPBITS_ONE,
+            # parity=serial.PARITY_MARK,
             rtscts=False,
             dsrdtr=False,
-            timeout=1,
+            timeout=0.5,
             inter_byte_timeout=0.1,
             write_timeout=1,
         )
@@ -41,6 +41,6 @@ class LightControl:
         return ans[2]
 
 
-def init():
+def init(port='/dev/ttyUSB0'):
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    return LightControl({'port': 'COM5'})
+    return LightControl({'port': port})
