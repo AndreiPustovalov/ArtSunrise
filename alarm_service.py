@@ -19,8 +19,8 @@ def calculate(start: dt.datetime, duration: dt.timedelta, now: dt.datetime):
     time_from_start = now - start
     i = float(time_from_start.seconds)
     t = float(duration.seconds)
-    w = 255. * i**2 / t**2
-    c = (255. * i * t - 255 * i**2) / t**2
+    c = 255. * i**2 / t**2
+    w = (255. * i * t - 255 * i**2) / t**2
     return int(c), int(w)
 
 
@@ -41,6 +41,8 @@ def service():
                         db.update_alarm(alarm['id'], disable_time=now)
                 c, w = calculate(today_alarm, alarm['sunrise_time'], now)
                 control.set_light(c, w)
+            elif now > today_alarm:
+                db.update_alarm(alarm['id'], active=0)
             else:
                 logger.info('Check false: {}, {}, {}, {}'.format(today_alarm + alarm['sunrise_time'], now, today_alarm,
                                                                  alarm['disable_time']))
