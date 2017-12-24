@@ -29,7 +29,7 @@ def convert_time(s):
 
 
 # Register the adapter
-sqlite3.register_adapter(datetime.time, lambda d: d.strftime("%Y-%m-%d %H:%M:%S"))
+sqlite3.register_adapter(datetime.time, lambda d: d.strftime("%H:%M:%S"))
 # Register the converter
 sqlite3.register_converter("time", convert_time)
 
@@ -48,7 +48,7 @@ sqlite3.register_adapter(datetime.timedelta, adapt_timedelta)
 # Register the converter
 sqlite3.register_converter("timedelta", convert_timedelta)
 
-sqlite3.register_adapter(datetime.datetime, str)
+sqlite3.register_adapter(datetime.datetime, lambda d: d.strftime('%Y-%m-%d %H:%M:%S'))
 # Register the converter
 sqlite3.register_converter("datetime", lambda s: datetime.datetime.strptime(s.decode(), '%Y-%m-%d %H:%M:%S'))
 
