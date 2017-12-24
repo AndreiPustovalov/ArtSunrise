@@ -6,16 +6,16 @@ from flask import jsonify
 from flask import abort
 from flask import make_response
 from flask import request
+from flask import render_template
+from threading import Thread
 import datetime
 import alarm_db as db
-from flask import render_template
+from alarm_service import service
 
 ver = 1
 
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('ArtSunrise')
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler(sys.stdout)
-logger.addHandler(ch)
 
 app = Flask(__name__)
 
@@ -86,11 +86,10 @@ def update_alarm_request(id):
         abort(400)
     if 'days' in request.json and type(request.json['days']) != str:
         abort(400)
-    alarm = [request.json.get('alarm_time', alarm["alarm_time"]),
+    alarm = [id, request.json.get('alarm_time', alarm["alarm_time"]),
                  request.json.get('sunrise_time', alarm["sunrise_time"]),
                  request.json.get('days', alarm["days"]),
-                 request.json.get('enabled', alarm["enabled"]),
-                 id]
+                 request.json.get('enabled', alarm["enabled"])]
     db.update_alarm(*alarm)
     alarm = db.get_alarm_by_id(id)
     return jsonify(serialize({'alarm': alarm}))
@@ -109,6 +108,7 @@ def root():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
-
-
+    alarm_service_thread = Thread(target=service)
+    alarm_service_thread.daemon = True
+    alarm_service_thread.start()
+    app.run(debug=False, host='0.0.0.0')

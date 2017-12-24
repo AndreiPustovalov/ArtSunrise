@@ -93,11 +93,20 @@ def create_alarm(alarm_time, sunrise_time, days, enabled, active, disable_time):
     return cur.lastrowid
 
 
-def update_alarm(alarm_time, sunrise_time, days, enabled, id):
+def update_alarm(id, alarm_time=None, sunrise_time=None, days=None, enabled=None, active=None, disable_time=None):
+    kwargs = {
+        'alarm_time': alarm_time,
+        'sunrise_time': sunrise_time,
+        'days': days,
+        'enabled': enabled,
+        'active': active,
+        'disable_time': disable_time
+    }
+    args_list = [k for k, v in kwargs.items() if v is not None]
     cur.execute('update alarms '
-                'set alarm_time = ?, sunrise_time = ?, days = ?, enabled = ? '
-                'where id = ?',
-                ([alarm_time, sunrise_time, days, enabled, id]))
+                'set {} '
+                'where id = ?'.format(', '.join('{} = ?'.format(k) for k in args_list)),
+                ([kwargs[k] for k in args_list] + [id]))
     conn.commit()
 
 

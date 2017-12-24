@@ -1,7 +1,7 @@
 import logging
 import sys
 import traceback
-from LightControl import LightControl
+from light_controller import LightControl
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('ArtSunrise')

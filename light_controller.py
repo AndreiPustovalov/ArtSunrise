@@ -1,16 +1,23 @@
 import serial
 import logging
 import binascii
+import json
 
 logger = logging.getLogger('ArtSunrise.device')
+
+
+def load_config(name='config.json'):
+    return json.load(open(name))
 
 
 class LightControl:
     CMD_GET_ACTIVE = 2
     CMD_SET = 1
 
-    def __init__(self, app_config):
-        self.port = app_config['port']
+    def __init__(self, app_config=None):
+        if app_config is None:
+            self.app_config = load_config()
+        self.port = self.app_config['port']
         self.com = serial.Serial(
             port=self.port,
             baudrate=9600,
