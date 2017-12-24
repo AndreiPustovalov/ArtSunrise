@@ -29,7 +29,7 @@ def convert_time(s):
 
 
 # Register the adapter
-sqlite3.register_adapter(datetime.time, str)
+sqlite3.register_adapter(datetime.time, lambda d: d.strftime("%Y-%m-%d %H:%M:%S"))
 # Register the converter
 sqlite3.register_converter("time", convert_time)
 
