@@ -42,5 +42,6 @@ def service():
                 c, w = calculate(today_alarm, alarm['sunrise_time'], now)
                 control.set_light(c, w)
             else:
-                logger.info('Check false: {}, {}, {}, {}'.format(today_alarm + alarm['sunrise_time'], now, today_alarm, alarm['disable_time']))
+                logger.info('Check false: {}, {}, {}, {}'.format(today_alarm + alarm['sunrise_time'], now, today_alarm,
+                                                                 alarm['disable_time']))
         time.sleep(5)
