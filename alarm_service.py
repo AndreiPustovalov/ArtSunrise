@@ -26,7 +26,6 @@ def calculate(start: dt.datetime, duration: dt.timedelta, now: dt.datetime):
 
 def service():
     control = LightControl()
-    base_switch = 0
     while True:
         alarms = db.get_alarm_list()
         now = dt.datetime.now()
@@ -35,15 +34,14 @@ def service():
             if today_alarm + alarm['sunrise_time'] > now >= today_alarm > alarm['disable_time']:
                 if alarm['active'] != 1:
                     db.update_alarm(alarm['id'], active=1)
-                    base_switch = control.get_active()
                 else:
-                    if base_switch != control.get_active():
+                    if 2 != control.get_active():
                         db.update_alarm(alarm['id'], disable_time=now)
+                        continue
                 c, w = calculate(today_alarm, alarm['sunrise_time'], now)
                 control.set_light(c, w)
             elif now > today_alarm:
                 db.update_alarm(alarm['id'], active=0)
-            else:
-                logger.info('Check false: {}, {}, {}, {}'.format(today_alarm + alarm['sunrise_time'], now, today_alarm,
+            logger.info('Check: {}, {}, {}, {}'.format(now, today_alarm, today_alarm + alarm['sunrise_time'],
                                                                  alarm['disable_time']))
         time.sleep(5)
